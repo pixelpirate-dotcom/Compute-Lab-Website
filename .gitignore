@@ -1,0 +1,8 @@
+# Supabase credentials — never commit this
+config.js
+
+# Claude Code local settings
+.claude/
+
+# Design/dev files — not needed on live site
+design-picker.html

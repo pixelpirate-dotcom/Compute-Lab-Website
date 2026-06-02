@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ComputeLab Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell" id="workspace-shell" hidden>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <span>ComputeLab</span>
+      </div>
+
+      <p class="nav-label">Workspace</p>
+      <nav id="main-nav">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span><span>Overview</span></button>
+        <button class="nav-item" data-view="feed"><span class="nav-icon">☷</span><span>Team feed</span></button>
+        <button class="nav-item" data-view="presentations"><span class="nav-icon">▶</span><span>Presentations</span></button>
+        <button class="nav-item" data-view="projects"><span class="nav-icon">◇</span><span>Projects</span></button>
+        <button class="nav-item" data-view="resources"><span class="nav-icon">□</span><span>Resources</span></button>
+      </nav>
+
+      <p class="nav-label nav-gap">Team</p>
+      <nav>
+        <button class="nav-item" data-view="members"><span class="nav-icon">♙</span><span>Members</span></button>
+        <button class="nav-item admin-only" data-view="admin"><span class="nav-icon">⚙</span><span>Admin</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="team-pill">
+          <div class="avatar">AS</div>
+          <div><strong id="sidebar-name">Arun Sharma</strong><br><span id="sidebar-role">Administrator</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <input class="search" id="search" type="search" placeholder="Search posts, projects, or resources...">
+        <div class="top-actions">
+          <span id="today"></span>
+          <button class="text-btn" id="auth-button" type="button">Sign out</button>
+          <div class="avatar">AS</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="view active" id="overview-view">
+          <section class="intro">
+            <div>
+              <h1>Welcome back.</h1>
+              <p class="subtitle">Your central hub for computational research and scientific discovery.</p>
+            </div>
+            <button class="primary-btn admin-only" data-open-admin="projects">+ New project</button>
+          </section>
+
+          <section class="hero">
+            <div class="presentation-card">
+              <div class="eyebrow">Presentation workspace</div>
+              <div class="card-btns">
+                <a class="launch-btn" id="presentation-link" href="#" target="_blank" rel="noreferrer">Open presentation app →</a>
+                <button class="launch-btn pdf-launch-btn" id="pdf-present-btn" type="button">Present PDF →</button>
+              </div>
+            </div>
+            <div class="stats" id="stats"></div>
+          </section>
+
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-title">
+                <h2>Team feed</h2>
+                <button class="text-btn" data-view="feed">View all posts</button>
+              </div>
+              <form class="composer" id="post-form">
+                <div class="avatar green">AS</div>
+                <div class="composer-body">
+                  <textarea name="content" placeholder="Share an update, result, or useful resource..." required></textarea>
+                  <div class="composer-actions">
+                    <input name="link" type="url" placeholder="Optional Drive or web link">
+                    <button type="submit">Share update</button>
+                  </div>
+                </div>
+              </form>
+              <div id="overview-posts"></div>
+            </section>
+
+            <aside class="right-column">
+              <section class="panel">
+                <div class="panel-title">
+                  <h2>Shared resources</h2>
+                  <button class="text-btn" data-view="resources">Browse</button>
+                </div>
+                <div class="resource-list" id="overview-resources"></div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-title">
+                  <h2>Team members</h2>
+                  <button class="text-btn" data-view="members">View all</button>
+                </div>
+                <div class="members" id="overview-members"></div>
+              </section>
+
+              <section class="panel upcoming-card">
+                <div class="panel-title">
+                  <h2>Upcoming</h2>
+                  <button class="text-btn" id="upcoming-add-btn">+ Add</button>
+                </div>
+                <div id="upcoming-form-wrap" hidden>
+                  <form class="upcoming-inline-form" id="upcoming-form">
+                    <input name="idx" type="hidden">
+                    <input name="date" placeholder="e.g. JUN 10" required>
+                    <input name="title" placeholder="Event title" required>
+                    <input name="details" placeholder="Time &amp; location">
+                    <div class="upcoming-form-row">
+                      <button class="primary-btn" type="submit" id="upcoming-submit">Save</button>
+                      <button class="quiet-btn" type="button" id="upcoming-cancel">Cancel</button>
+                    </div>
+                  </form>
+                </div>
+                <div id="upcoming-list"></div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="feed-view">
+          <div class="intro">
+            <div><h1>Team feed</h1><p class="subtitle">Updates, results, and conversations from across the team.</p></div>
+          </div>
+          <section class="panel list-panel" id="feed-list"></section>
+        </section>
+
+        <section class="view" id="presentations-view">
+          <div class="intro">
+            <div><h1>Presentations</h1><p class="subtitle">Open the team's existing presentation workspace.</p></div>
+          </div>
+          <section class="presentation-card presentation-page">
+            <div class="eyebrow">External web app</div>
+            <h2>Your presentation workspace lives here.</h2>
+            <p>The admin can set the final app URL when you are ready to connect it.</p>
+            <div class="card-btns">
+              <a class="launch-btn" id="presentation-page-link" href="#" target="_blank" rel="noreferrer">Open presentation app →</a>
+              <button class="launch-btn pdf-launch-btn" id="pdf-present-btn-page" type="button">Present PDF →</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="projects-view">
+          <div class="intro">
+            <div><h1>Projects</h1><p class="subtitle">Track active computational work across the team.</p></div>
+            <button class="primary-btn admin-only" data-open-admin="projects">+ New project</button>
+          </div>
+          <div class="card-grid" id="projects-list"></div>
+        </section>
+
+        <section class="view" id="resources-view">
+          <div class="intro">
+            <div><h1>Resources</h1><p class="subtitle">Shared Drive folders, documentation, datasets, and useful links.</p></div>
+            <button class="primary-btn admin-only" data-open-admin="resources">+ New resource</button>
+          </div>
+          <section class="panel list-panel"><div class="resource-list" id="resources-list"></div></section>
+        </section>
+
+        <section class="view" id="members-view">
+          <div class="intro">
+            <div><h1>Team members</h1><p class="subtitle">The people working across your computational projects.</p></div>
+            <button class="primary-btn admin-only" data-open-admin="members">+ New member</button>
+          </div>
+          <div class="card-grid" id="members-list"></div>
+        </section>
+
+        <section class="view" id="admin-view">
+          <div class="intro">
+            <div><h1>Admin workspace</h1><p class="subtitle">Manage the content visible to your team.</p></div>
+          </div>
+
+          <div class="admin-tabs" id="admin-tabs">
+            <button class="active" data-admin-tab="projects">Projects</button>
+            <button data-admin-tab="members">Team members</button>
+            <button data-admin-tab="resources">Resources</button>
+            <button data-admin-tab="settings">Settings</button>
+          </div>
+
+          <section class="panel admin-section active" id="admin-projects">
+            <form class="admin-form" id="project-form">
+              <h2 id="project-form-title">Add project</h2>
+              <input name="id" type="hidden">
+              <input name="name" placeholder="Project name" required>
+              <input name="group" placeholder="Group or department" required>
+              <textarea name="description" placeholder="Short project description" required></textarea>
+              <select name="status"><option>Active</option><option>Planning</option><option>Completed</option></select>
+              <div class="form-actions">
+                <button class="primary-btn" type="submit" id="project-submit">Add project</button>
+                <button class="quiet-btn" type="button" data-cancel-edit="project">Cancel edit</button>
+              </div>
+            </form>
+            <div class="admin-list" id="admin-project-list"></div>
+          </section>
+
+          <section class="panel admin-section" id="admin-members">
+            <form class="admin-form" id="member-form">
+              <h2 id="member-form-title">Add team member</h2>
+              <input name="id" type="hidden">
+              <input name="name" placeholder="Full name" required>
+              <input name="email" type="email" placeholder="Email address" required>
+              <input name="group" placeholder="Group or specialization" required>
+              <select name="role"><option value="member">Member</option><option value="admin">Admin</option></select>
+              <div class="form-actions">
+                <button class="primary-btn" type="submit" id="member-submit">Add member</button>
+                <button class="quiet-btn" type="button" data-cancel-edit="member">Cancel edit</button>
+              </div>
+            </form>
+            <div class="admin-list" id="admin-member-list"></div>
+          </section>
+
+          <section class="panel admin-section" id="admin-resources">
+            <form class="admin-form" id="resource-form">
+              <h2 id="resource-form-title">Add resource</h2>
+              <input name="id" type="hidden">
+              <input name="name" placeholder="Resource name" required>
+              <input name="type" placeholder="Type, such as Google Drive folder" required>
+              <input name="url" type="url" placeholder="https://..." required>
+              <div class="form-actions">
+                <button class="primary-btn" type="submit" id="resource-submit">Add resource</button>
+                <button class="quiet-btn" type="button" data-cancel-edit="resource">Cancel edit</button>
+              </div>
+            </form>
+            <div class="admin-list" id="admin-resource-list"></div>
+          </section>
+
+          <section class="panel admin-section" id="admin-settings">
+            <form class="admin-form" id="settings-form">
+              <h2>Workspace settings</h2>
+              <input name="presentationUrl" type="url" placeholder="Presentation app URL">
+              <button class="primary-btn" type="submit">Save settings</button>
+            </form>
+            <div class="admin-note">
+              <h3>Live workspace</h3>
+              <p>Changes are stored in Supabase and shared with signed-in team members.</p>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="auth-modal" id="auth-modal">
+    <section class="auth-card">
+      <button class="modal-close" id="auth-close" type="button" aria-label="Close" hidden>×</button>
+      <div class="eyebrow">Supabase account</div>
+      <h2>Connect to the shared workspace</h2>
+      <p>Sign in to load the live team data. New users can create an account here too.</p>
+      <form class="admin-form" id="auth-form">
+        <input name="name" placeholder="Full name (needed for signup)">
+        <input name="email" type="email" placeholder="Email address" required>
+        <input name="password" type="password" placeholder="Password" minlength="6" required>
+        <div class="auth-actions">
+          <button class="primary-btn" type="submit" data-auth-action="signin">Sign in</button>
+          <button class="quiet-btn" type="button" id="signup-button">Create account</button>
+        </div>
+        <button class="text-btn forgot-btn" type="button" id="forgot-password">Forgot password?</button>
+      </form>
+      <form class="admin-form" id="password-update-form" hidden>
+        <input name="password" type="password" placeholder="New password" minlength="6" required>
+        <button class="primary-btn" type="submit">Save new password</button>
+      </form>
+      <p class="auth-status" id="auth-status" role="status"></p>
+      <p class="auth-hint">Only signed-in team members can open the workspace.</p>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <input type="file" id="pdf-input" accept=".pdf" hidden>
+  <div class="pdf-viewer" id="pdf-viewer" hidden>
+    <div class="pdf-toolbar">
+      <span id="pdf-filename"></span>
+      <button class="pdf-close" id="pdf-close" type="button">✕ Close</button>
+    </div>
+    <iframe id="pdf-frame" title="PDF Viewer"></iframe>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
