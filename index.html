@@ -205,18 +205,10 @@
           </section>
 
           <section class="panel admin-section" id="admin-members">
-            <form class="admin-form" id="member-form">
-              <h2 id="member-form-title">Add team member</h2>
-              <input name="id" type="hidden">
-              <input name="name" placeholder="Full name" required>
-              <input name="email" type="email" placeholder="Email address" required>
-              <input name="group" placeholder="Group or specialization" required>
-              <select name="role"><option value="member">Member</option><option value="admin">Admin</option></select>
-              <div class="form-actions">
-                <button class="primary-btn" type="submit" id="member-submit">Add member</button>
-                <button class="quiet-btn" type="button" data-cancel-edit="member">Cancel edit</button>
-              </div>
-            </form>
+            <div class="admin-form" style="border-bottom:1px solid var(--line)">
+              <h2>Team members</h2>
+              <p style="font-size:12px;color:var(--muted);margin:0">Members and their PINs are managed in <strong>config.js</strong>. Edit that file to add, remove, or change PINs for team members.</p>
+            </div>
             <div class="admin-list" id="admin-member-list"></div>
           </section>
 
@@ -251,29 +243,33 @@
     </main>
   </div>
 
-  <div class="auth-modal" id="auth-modal">
-    <section class="auth-card">
-      <button class="modal-close" id="auth-close" type="button" aria-label="Close" hidden>×</button>
-      <div class="eyebrow">Supabase account</div>
-      <h2>Connect to the shared workspace</h2>
-      <p>Sign in to load the live team data. New users can create an account here too.</p>
-      <form class="admin-form" id="auth-form">
-        <input name="name" placeholder="Full name (needed for signup)">
-        <input name="email" type="email" placeholder="Email address" required>
-        <input name="password" type="password" placeholder="Password" minlength="6" required>
-        <div class="auth-actions">
-          <button class="primary-btn" type="submit" data-auth-action="signin">Sign in</button>
-          <button class="quiet-btn" type="button" id="signup-button">Create account</button>
+  <div class="pin-gate" id="pin-gate" hidden>
+    <div class="pin-card">
+      <div class="pin-brand">
+        <div class="brand-mark">C</div>
+        <span>ComputeLab</span>
+      </div>
+      <h2>Access Your Workspace</h2>
+      <p>Select your profile and enter your 4-digit PIN to continue.</p>
+      <div class="pin-field-group">
+        <label class="pin-label">Your profile</label>
+        <select id="member-select" class="pin-select">
+          <option value="">— Select your name —</option>
+        </select>
+      </div>
+      <div class="pin-field-group">
+        <label class="pin-label">PIN</label>
+        <div class="pin-digits">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
         </div>
-        <button class="text-btn forgot-btn" type="button" id="forgot-password">Forgot password?</button>
-      </form>
-      <form class="admin-form" id="password-update-form" hidden>
-        <input name="password" type="password" placeholder="New password" minlength="6" required>
-        <button class="primary-btn" type="submit">Save new password</button>
-      </form>
-      <p class="auth-status" id="auth-status" role="status"></p>
-      <p class="auth-hint">Only signed-in team members can open the workspace.</p>
-    </section>
+      </div>
+      <button class="primary-btn pin-enter-btn" id="pin-enter-btn" type="button">Continue →</button>
+      <p class="pin-error" id="pin-error" role="alert"></p>
+      <p class="pin-hint">Don't have a PIN? Contact your workspace admin.</p>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>

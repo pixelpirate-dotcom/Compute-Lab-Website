@@ -224,22 +224,22 @@ textarea:focus, input:focus, select:focus { border-color: var(--accent); backgro
 .pdf-close:hover { background: rgba(255,255,255,0.2); }
 #pdf-frame { flex: 1; border: 0; width: 100%; height: 100%; }
 
-/* ─── AUTH MODAL ────────────────────────────── */
-.auth-modal { position: fixed; inset: 0; z-index: 20; display: grid; padding: 20px; background: rgba(0,0,0,0.45); place-items: center; }
-.auth-modal[hidden] { display: none; }
-.auth-card { position: relative; width: min(420px, 100%); padding: 26px; background: var(--paper); border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid var(--line); }
-.auth-card .eyebrow { color: var(--accent); }
-.auth-card h2 { margin-bottom: 6px; font-family: "Manrope", Arial, sans-serif; font-size: 19px; font-weight: 800; }
-.auth-card > p { color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 16px; }
-.auth-card .admin-form { gap: 9px; }
-.auth-card .admin-form input { width: 100%; }
-.modal-close { position: absolute; top: 12px; right: 14px; color: var(--muted); background: transparent; border: 0; font-size: 22px; }
-.auth-actions { display: flex; gap: 8px; }
-.auth-actions button:disabled { cursor: wait; opacity: 0.58; }
-.forgot-btn { width: fit-content; margin-top: 4px; color: var(--muted); font-size: 11px; }
-.auth-status { min-height: 18px; margin: 10px 0 0; color: var(--muted); font-size: 12px; font-weight: 600; }
-.auth-status.error { color: var(--danger); }
-.auth-hint { margin: 12px 0 0; font-size: 11px; color: var(--muted); }
+/* ─── PIN GATE ──────────────────────────────── */
+.pin-gate { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--canvas); padding: 20px; }
+.pin-gate[hidden] { display: none; }
+.pin-card { width: min(400px, 100%); background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+.pin-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; font-weight: 700; font-size: 14px; }
+.pin-card h2 { font-family: "Manrope", Arial, sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
+.pin-card > p { font-size: 12px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+.pin-field-group { margin-bottom: 18px; }
+.pin-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px; }
+.pin-select { width: 100%; padding: 9px 12px; font-size: 13px; }
+.pin-digits { display: flex; gap: 10px; }
+.pin-digit { width: 58px; height: 58px; text-align: center; font-size: 22px; font-weight: 700; border: 2px solid var(--line); border-radius: 10px; background: var(--canvas); outline: none; padding: 0; transition: border-color 0.15s, box-shadow 0.15s; }
+.pin-digit:focus { border-color: var(--accent); background: var(--paper); box-shadow: 0 0 0 3px rgba(9,105,218,0.12); }
+.pin-enter-btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 700; margin-top: 4px; border-radius: 8px; }
+.pin-error { min-height: 18px; margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--danger); }
+.pin-hint { margin: 14px 0 0; font-size: 11px; color: var(--muted); text-align: center; }
 
 /* ─── TOAST ─────────────────────────────────── */
 .toast { position: fixed; right: 20px; bottom: 20px; z-index: 2000; max-width: min(340px, calc(100vw - 40px)); padding: 10px 14px; color: #fff; background: #24292f; border-radius: 6px; font-size: 12px; font-weight: 600; opacity: 0; transform: translateY(6px); transition: 180ms ease; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
