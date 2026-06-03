@@ -36,13 +36,18 @@ function empty(message) {
 // ── PIN Gate ───────────────────────────────────────────────────────────────
 const AVATAR_COLORS = ["green", "orange", "blue", "green", "orange", "blue"];
 
-function initPinGate() {
-  const members = config.members || [];
+async function initPinGate() {
+  let memberList = [];
+  try {
+    const { data, error } = await supabaseClient
+      .from("member_access").select("id, name").order("name");
+    if (!error) memberList = data || [];
+  } catch {}
 
   // Populate dropdown
   const select = document.getElementById("member-select");
   select.innerHTML = '<option value="">— Select your name —</option>' +
-    members.map(m => `<option value="${escapeHtml(String(m.id))}">${escapeHtml(m.name)}</option>`).join("");
+    memberList.map(m => `<option value="${escapeHtml(String(m.id))}">${escapeHtml(m.name)}</option>`).join("");
 
   // PIN digit auto-advance & backspace
   const digits = [...document.querySelectorAll(".pin-digit")];
@@ -65,8 +70,14 @@ function initPinGate() {
     const saved = sessionStorage.getItem("cl_session");
     if (saved) {
       const parsed = JSON.parse(saved);
-      const valid = members.find(m => String(m.id) === String(parsed.id) && m.name === parsed.name);
-      if (valid) { currentMember = valid; openWorkspace(); return; }
+      const { data: fullMember } = await supabaseClient
+        .from("member_access").select("id, name, group_name, role")
+        .eq("id", parsed.id).eq("name", parsed.name).maybeSingle();
+      if (fullMember) {
+        currentMember = { id: fullMember.id, name: fullMember.name, group: fullMember.group_name, role: fullMember.role };
+        openWorkspace();
+        return;
+      }
     }
   } catch {}
 
@@ -78,7 +89,7 @@ function showPinGate() {
   document.getElementById("workspace-shell").hidden = true;
 }
 
-function enterWorkspace() {
+async function enterWorkspace() {
   const errorEl = document.getElementById("pin-error");
   const selectedId = document.getElementById("member-select").value;
   const pin = [...document.querySelectorAll(".pin-digit")].map(d => d.value).join("");
@@ -87,17 +98,25 @@ function enterWorkspace() {
   if (!selectedId) { errorEl.textContent = "Please select your profile first."; return; }
   if (pin.length < 4) { errorEl.textContent = "Enter all 4 digits of your PIN."; return; }
 
-  const member = (config.members || []).find(m => String(m.id) === selectedId && String(m.pin) === pin);
-  if (!member) {
-    errorEl.textContent = "Incorrect PIN. Please try again.";
-    document.querySelectorAll(".pin-digit").forEach(d => d.value = "");
-    document.querySelectorAll(".pin-digit")[0].focus();
-    return;
-  }
+  try {
+    const { data: member } = await supabaseClient
+      .from("member_access").select("id, name, group_name, role")
+      .eq("id", selectedId).eq("pin", pin).maybeSingle();
 
-  sessionStorage.setItem("cl_session", JSON.stringify({ id: member.id, name: member.name }));
-  currentMember = member;
-  openWorkspace();
+    if (!member) {
+      errorEl.textContent = "Incorrect PIN. Please try again.";
+      document.querySelectorAll(".pin-digit").forEach(d => d.value = "");
+      document.querySelectorAll(".pin-digit")[0].focus();
+      return;
+    }
+
+    const memberObj = { id: member.id, name: member.name, group: member.group_name, role: member.role };
+    sessionStorage.setItem("cl_session", JSON.stringify({ id: memberObj.id, name: memberObj.name }));
+    currentMember = memberObj;
+    openWorkspace();
+  } catch {
+    errorEl.textContent = "Connection error. Please try again.";
+  }
 }
 
 async function openWorkspace() {
@@ -114,23 +133,25 @@ async function openWorkspace() {
 
 // ── Data ───────────────────────────────────────────────────────────────────
 async function loadLiveState() {
-  const [projectsRes, resourcesRes, postsRes, settingsRes] = await Promise.all([
+  const [projectsRes, resourcesRes, postsRes, settingsRes, membersRes] = await Promise.all([
     supabaseClient.from("projects").select("*").order("created_at", { ascending: false }),
     supabaseClient.from("resources").select("*").order("created_at", { ascending: false }),
     supabaseClient.from("posts").select("*").order("created_at", { ascending: false }),
-    supabaseClient.from("workspace_settings").select("*").eq("id", true).single()
+    supabaseClient.from("workspace_settings").select("*").eq("id", true).single(),
+    supabaseClient.from("member_access").select("id, name, group_name, role").order("name")
   ]);
 
   if (projectsRes.error) throw projectsRes.error;
   if (resourcesRes.error) throw resourcesRes.error;
   if (postsRes.error) throw postsRes.error;
   if (settingsRes.error) throw settingsRes.error;
+  if (membersRes.error) throw membersRes.error;
 
   state = {
     settings: { presentationUrl: settingsRes.data.presentation_url },
-    members: (config.members || []).map((m, i) => ({
-      id: m.id, name: m.name, group: m.group || "Research Team",
-      role: m.role || "member", color: AVATAR_COLORS[i % AVATAR_COLORS.length]
+    members: membersRes.data.map((m, i) => ({
+      id: m.id, name: m.name, group: m.group_name,
+      role: m.role, color: AVATAR_COLORS[i % AVATAR_COLORS.length]
     })),
     projects: projectsRes.data.map(r => ({ id: r.id, name: r.name, group: r.group_name, description: r.description, status: r.status })),
     resources: resourcesRes.data.map(r => ({ id: r.id, name: r.name, type: r.resource_type, url: r.url })),
@@ -155,7 +176,7 @@ async function updateRecord(table, id, payload) {
   await loadLiveState();
 }
 async function removeRecord(collection, id) {
-  const table = { projects: "projects", resources: "resources", posts: "posts" }[collection];
+  const table = { projects: "projects", resources: "resources", posts: "posts", members: "member_access" }[collection];
   const { error } = await supabaseClient.from(table).delete().eq("id", id);
   if (error) throw error;
   await loadLiveState();
@@ -234,8 +255,8 @@ function renderAdminLists() {
   document.getElementById("admin-resource-list").innerHTML =
     state.resources.map(item => adminRow(item.id, "resources", item.name, item.type)).join("") || empty("No resources yet.");
   document.getElementById("admin-member-list").innerHTML =
-    state.members.map(m => `<div class="admin-row"><div><strong>${escapeHtml(m.name)}</strong><span>${escapeHtml(m.group)} | ${escapeHtml(m.role)}</span></div></div>`).join("") ||
-    empty("No members in config.js yet.");
+    state.members.map(m => adminRow(m.id, "members", m.name, `${m.group} | ${m.role}`)).join("") ||
+    empty("No members yet.");
 }
 
 function adminRow(id, collection, title, subtitle) {
@@ -370,6 +391,23 @@ document.getElementById("settings-form").addEventListener("submit", async (e) =>
     if (error) throw error;
     await loadLiveState();
     notify("Settings saved.");
+  } catch (error) { showError(error); }
+});
+
+document.getElementById("member-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const values = readForm(e.currentTarget);
+  const payload = { name: values.name, group_name: values.group, role: values.role };
+  if (!values.id && (!values.pin || values.pin.length !== 4)) {
+    notify("PIN is required and must be exactly 4 digits.");
+    return;
+  }
+  if (values.pin && values.pin.length === 4) payload.pin = values.pin;
+  try {
+    if (values.id) await updateRecord("member_access", values.id, payload);
+    else await addRecord("member_access", { ...payload, pin: values.pin });
+    resetAdminForm("member");
+    notify(values.id ? "Member updated." : "Member added.");
   } catch (error) { showError(error); }
 });
 

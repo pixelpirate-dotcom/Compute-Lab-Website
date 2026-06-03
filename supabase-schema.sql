@@ -80,3 +80,25 @@ create policy "Anon delete posts" on public.posts for delete to anon using (true
 -- Workspace settings
 create policy "Anon select settings" on public.workspace_settings for select to anon using (true);
 create policy "Anon update settings" on public.workspace_settings for update to anon using (true) with check (true);
+
+-- ── Member access (replaces members array in config.js) ──────────────────
+
+create table public.member_access (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  group_name text not null default 'Research Team',
+  role text not null default 'member' check (role in ('admin', 'member')),
+  pin text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.member_access enable row level security;
+
+create policy "Anon select members" on public.member_access for select to anon using (true);
+create policy "Anon insert members" on public.member_access for insert to anon with check (true);
+create policy "Anon update members" on public.member_access for update to anon using (true) with check (true);
+create policy "Anon delete members" on public.member_access for delete to anon using (true);
+
+-- Seed your first admin — change name and PIN before running
+insert into public.member_access (name, group_name, role, pin) values
+  ('Admin', 'Research Team', 'admin', '0000');

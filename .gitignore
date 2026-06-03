@@ -1,6 +1,3 @@
-# Supabase credentials — never commit this
-config.js
-
 # Claude Code local settings
 .claude/
 

@@ -205,10 +205,21 @@
           </section>
 
           <section class="panel admin-section" id="admin-members">
-            <div class="admin-form" style="border-bottom:1px solid var(--line)">
-              <h2>Team members</h2>
-              <p style="font-size:12px;color:var(--muted);margin:0">Members and their PINs are managed in <strong>config.js</strong>. Edit that file to add, remove, or change PINs for team members.</p>
-            </div>
+            <form class="admin-form" id="member-form">
+              <h2 id="member-form-title">Add member</h2>
+              <input name="id" type="hidden">
+              <input name="name" placeholder="Full name" required>
+              <input name="group" placeholder="Group or department" required>
+              <select name="role">
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+              <input name="pin" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN (leave blank to keep existing)">
+              <div class="form-actions">
+                <button class="primary-btn" type="submit" id="member-submit">Add member</button>
+                <button class="quiet-btn" type="button" data-cancel-edit="member">Cancel edit</button>
+              </div>
+            </form>
             <div class="admin-list" id="admin-member-list"></div>
           </section>
 
