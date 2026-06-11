@@ -102,3 +102,21 @@ create policy "Anon delete members" on public.member_access for delete to anon u
 -- Seed your first admin — change name and PIN before running
 insert into public.member_access (name, group_name, role, pin) values
   ('Admin', 'Research Team', 'admin', '0000');
+
+-- ── Vault items (personal storage per member) ────────────────────────────
+-- Run this block in the Supabase SQL Editor to add Personal Vaults.
+
+create table if not exists public.vault_items (
+  id uuid primary key default gen_random_uuid(),
+  member_id uuid not null references public.member_access(id) on delete cascade,
+  title text not null,
+  content text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.vault_items enable row level security;
+
+create policy "Anon select vault items" on public.vault_items for select to anon using (true);
+create policy "Anon insert vault items" on public.vault_items for insert to anon with check (true);
+create policy "Anon update vault items" on public.vault_items for update to anon using (true) with check (true);
+create policy "Anon delete vault items" on public.vault_items for delete to anon using (true);

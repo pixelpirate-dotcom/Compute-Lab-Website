@@ -3,9 +3,10 @@ const supabaseClient = window.supabase.createClient(config.supabaseUrl, config.s
 
 let currentMember = null;
 let state = emptyState();
+let openVaultMemberId = null;
 
 function emptyState() {
-  return { settings: { presentationUrl: "" }, projects: [], members: [], resources: [], posts: [] };
+  return { settings: { presentationUrl: "" }, projects: [], members: [], resources: [], vaultItems: [] };
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────
@@ -133,19 +134,19 @@ async function openWorkspace() {
 
 // ── Data ───────────────────────────────────────────────────────────────────
 async function loadLiveState() {
-  const [projectsRes, resourcesRes, postsRes, settingsRes, membersRes] = await Promise.all([
+  const [projectsRes, resourcesRes, settingsRes, membersRes] = await Promise.all([
     supabaseClient.from("projects").select("*").order("created_at", { ascending: false }),
     supabaseClient.from("resources").select("*").order("created_at", { ascending: false }),
-    supabaseClient.from("posts").select("*").order("created_at", { ascending: false }),
     supabaseClient.from("workspace_settings").select("*").eq("id", true).single(),
     supabaseClient.from("member_access").select("id, name, group_name, role").order("name")
   ]);
 
   if (projectsRes.error) throw projectsRes.error;
   if (resourcesRes.error) throw resourcesRes.error;
-  if (postsRes.error) throw postsRes.error;
   if (settingsRes.error) throw settingsRes.error;
   if (membersRes.error) throw membersRes.error;
+
+  const vaultRes = await supabaseClient.from("vault_items").select("*").order("created_at", { ascending: false });
 
   state = {
     settings: { presentationUrl: settingsRes.data.presentation_url },
@@ -155,12 +156,7 @@ async function loadLiveState() {
     })),
     projects: projectsRes.data.map(r => ({ id: r.id, name: r.name, group: r.group_name, description: r.description, status: r.status })),
     resources: resourcesRes.data.map(r => ({ id: r.id, name: r.name, type: r.resource_type, url: r.url })),
-    posts: postsRes.data.map(r => ({
-      id: r.id, author: r.author_name || "Team member",
-      group: r.author_group || "Research Team",
-      color: "green", time: formatTime(r.created_at),
-      content: r.content, link: r.link_url, linkLabel: r.link_label
-    }))
+    vaultItems: vaultRes.error ? [] : (vaultRes.data || [])
   };
   render();
 }
@@ -183,19 +179,6 @@ async function removeRecord(collection, id) {
 }
 
 // ── Render ─────────────────────────────────────────────────────────────────
-function postTemplate(post) {
-  const attachment = post.link
-    ? `<a class="attachment" href="${escapeHtml(post.link)}" target="_blank" rel="noreferrer">
-        <div class="file-icon">+</div><div><strong>${escapeHtml(post.linkLabel || "Shared link")}</strong><br><span>Open linked resource</span></div>
-      </a>` : "";
-  return `<article class="post">
-    <div class="post-head">
-      <div class="avatar ${escapeHtml(post.color)}">${escapeHtml(initials(post.author))}</div>
-      <div><div class="post-author">${escapeHtml(post.author)}</div><div class="post-time">${escapeHtml(post.time)} | ${escapeHtml(post.group)}</div></div>
-    </div>
-    <p>${escapeHtml(post.content)}</p>${attachment}
-  </article>`;
-}
 function resourceTemplate(resource) {
   return `<a class="resource resource-link" href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer">
     <div class="file-icon">${escapeHtml(resource.name[0]?.toUpperCase() || "R")}</div>
@@ -214,8 +197,6 @@ function render() {
   const myInitials = initials(currentMember?.name || "");
   const topAv = document.querySelector(".top-actions .avatar");
   if (topAv) topAv.textContent = myInitials;
-  const composerAv = document.querySelector(".composer .avatar");
-  if (composerAv) composerAv.textContent = myInitials;
 
   document.getElementById("today").textContent =
     new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric" }).format(new Date());
@@ -228,8 +209,6 @@ function render() {
     [upcomingCount, "Upcoming talks"]
   ].map(([n, label]) => `<div class="stat"><strong>${String(n).padStart(2, "0")}</strong><span>${label}</span></div>`).join("");
 
-  document.getElementById("overview-posts").innerHTML = state.posts.slice(0, 2).map(postTemplate).join("") || empty("No updates posted yet.");
-  document.getElementById("feed-list").innerHTML = state.posts.map(postTemplate).join("") || empty("No updates posted yet.");
   document.getElementById("overview-resources").innerHTML = state.resources.slice(0, 3).map(resourceTemplate).join("") || empty("No resources added yet.");
   document.getElementById("resources-list").innerHTML = state.resources.map(resourceTemplate).join("") || empty("No resources added yet.");
 
@@ -247,6 +226,8 @@ function render() {
 
   renderAdminLists();
   setPresentationLinks();
+  renderOverviewVault();
+  renderVaults();
 }
 
 function renderAdminLists() {
@@ -279,6 +260,89 @@ function setPresentationLinks() {
   });
   const urlInput = document.querySelector("#settings-form [name='presentationUrl']");
   if (urlInput) urlInput.value = url;
+}
+
+// ── Vault ──────────────────────────────────────────────────────────────────
+function vaultItemTemplate(item, isOwn) {
+  return `<div class="vault-item">
+    <div class="vault-item-body">
+      <strong>${escapeHtml(item.title)}</strong>
+      ${item.content ? `<p>${escapeHtml(item.content)}</p>` : ""}
+      <span class="vault-item-time">${escapeHtml(formatTime(item.created_at))}</span>
+    </div>
+    ${isOwn ? `<button class="remove-btn" data-remove-vault="${escapeHtml(String(item.id))}">Remove</button>` : ""}
+  </div>`;
+}
+
+function renderOverviewVault() {
+  const el = document.getElementById("overview-vault");
+  if (!el) return;
+  const myItems = state.vaultItems.filter(v => String(v.member_id) === String(currentMember?.id));
+  el.innerHTML = myItems.slice(0, 3).map(item => vaultItemTemplate(item, true)).join("")
+    || empty("Your vault is empty. Add something above.");
+}
+
+function renderVaults() {
+  const bar = document.getElementById("vault-members-bar");
+  if (!bar) return;
+  if (!openVaultMemberId) openVaultMemberId = currentMember?.id ? String(currentMember.id) : null;
+  bar.innerHTML = state.members.map(m => {
+    const count = state.vaultItems.filter(v => String(v.member_id) === String(m.id)).length;
+    const isOpen = String(m.id) === String(openVaultMemberId);
+    return `<button class="vault-member-btn${isOpen ? " active" : ""}" data-open-vault="${escapeHtml(String(m.id))}">
+      <div class="avatar ${escapeHtml(m.color)}">${escapeHtml(initials(m.name))}</div>
+      <div class="vault-btn-info">
+        <span class="vault-btn-name">${escapeHtml(m.name.split(" ")[0])}</span>
+        <span class="vault-btn-count">${count} item${count !== 1 ? "s" : ""}</span>
+      </div>
+    </button>`;
+  }).join("");
+  renderOpenVault();
+}
+
+function renderOpenVault() {
+  const panel = document.getElementById("vault-open-panel");
+  if (!panel) return;
+  if (!openVaultMemberId) { panel.innerHTML = ""; return; }
+  const member = state.members.find(m => String(m.id) === String(openVaultMemberId));
+  if (!member) { panel.innerHTML = ""; return; }
+  const items = state.vaultItems.filter(v => String(v.member_id) === String(openVaultMemberId));
+  const isOwn = String(openVaultMemberId) === String(currentMember?.id);
+  const addForm = isOwn ? `
+    <form class="vault-add-form" id="vault-add-form">
+      <div class="vault-add-row">
+        <input name="title" placeholder="Title or short note..." required>
+        <button class="primary-btn" type="submit">Add</button>
+      </div>
+      <textarea name="content" placeholder="More details, links, or content (optional)..."></textarea>
+    </form>` : "";
+  const itemsHtml = items.length
+    ? items.map(item => vaultItemTemplate(item, isOwn)).join("")
+    : `<div class="empty">${isOwn ? "Your vault is empty. Add something above." : escapeHtml(member.name.split(" ")[0]) + "'s vault is empty."}</div>`;
+  panel.innerHTML = `<div class="vault-panel">
+    <div class="vault-panel-header">
+      <div class="avatar ${escapeHtml(member.color)}">${escapeHtml(initials(member.name))}</div>
+      <div><strong>${escapeHtml(member.name)}'s vault</strong><span>${items.length} item${items.length !== 1 ? "s" : ""}</span></div>
+    </div>
+    ${addForm}
+    <div class="vault-items-list">${itemsHtml}</div>
+  </div>`;
+}
+
+async function addVaultItem(title, content) {
+  const { error } = await supabaseClient.from("vault_items").insert({
+    member_id: currentMember.id,
+    title: title.trim(),
+    content: (content || "").trim()
+  });
+  if (error) throw error;
+  await loadLiveState();
+}
+
+async function removeVaultItem(id) {
+  const { error } = await supabaseClient.from("vault_items").delete().eq("id", id);
+  if (error) throw error;
+  await loadLiveState();
 }
 
 // ── Views ──────────────────────────────────────────────────────────────────
@@ -340,21 +404,32 @@ document.addEventListener("click", async (e) => {
     try { await removeRecord(removeBtn.dataset.remove, removeBtn.dataset.id); notify("Item removed."); }
     catch (error) { showError(error); }
   }
+  const openVaultBtn = e.target.closest("[data-open-vault]");
+  if (openVaultBtn) { openVaultMemberId = openVaultBtn.dataset.openVault; renderVaults(); }
+  const removeVaultBtn = e.target.closest("[data-remove-vault]");
+  if (removeVaultBtn) {
+    try { await removeVaultItem(removeVaultBtn.dataset.removeVault); notify("Removed from vault."); }
+    catch (error) { showError(error); }
+  }
 });
 
-document.getElementById("post-form").addEventListener("submit", async (e) => {
+document.getElementById("vault-quick-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const values = readForm(e.currentTarget);
   try {
-    await addRecord("posts", {
-      content: values.content,
-      link_url: values.link || null,
-      link_label: values.link ? "Shared resource" : null,
-      author_name: currentMember?.name || "Team member",
-      author_group: currentMember?.group || "Research Team"
-    });
+    await addVaultItem(values.title, "");
     e.currentTarget.reset();
-    notify("Update shared with the team.");
+    notify("Saved to your vault.");
+  } catch (error) { showError(error); }
+});
+
+document.addEventListener("submit", async (e) => {
+  if (e.target.id !== "vault-add-form") return;
+  e.preventDefault();
+  const values = readForm(e.target);
+  try {
+    await addVaultItem(values.title, values.content || "");
+    notify("Added to vault.");
   } catch (error) { showError(error); }
 });
 
@@ -426,7 +501,7 @@ document.getElementById("auth-button").addEventListener("click", () => {
 document.getElementById("search").addEventListener("input", (e) => {
   const query = e.target.value.trim().toLowerCase();
   if (!query) return;
-  const matches = [...state.projects, ...state.resources, ...state.posts]
+  const matches = [...state.projects, ...state.resources, ...state.vaultItems]
     .filter(item => JSON.stringify(item).toLowerCase().includes(query)).length;
   notify(`${matches} matching item${matches === 1 ? "" : "s"} found.`);
 });

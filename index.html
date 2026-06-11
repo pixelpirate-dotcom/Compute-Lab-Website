@@ -20,7 +20,7 @@
       <p class="nav-label">Workspace</p>
       <nav id="main-nav">
         <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span><span>Overview</span></button>
-        <button class="nav-item" data-view="feed"><span class="nav-icon">☷</span><span>Team feed</span></button>
+        <button class="nav-item" data-view="vaults"><span class="nav-icon">⊞</span><span>Vaults</span></button>
         <button class="nav-item" data-view="presentations"><span class="nav-icon">▶</span><span>Presentations</span></button>
         <button class="nav-item" data-view="projects"><span class="nav-icon">◇</span><span>Projects</span></button>
         <button class="nav-item" data-view="resources"><span class="nav-icon">□</span><span>Resources</span></button>
@@ -74,20 +74,16 @@
           <div class="dashboard-grid">
             <section class="panel">
               <div class="panel-title">
-                <h2>Team feed</h2>
-                <button class="text-btn" data-view="feed">View all posts</button>
+                <h2>My vault</h2>
+                <button class="text-btn" data-view="vaults">View all vaults</button>
               </div>
-              <form class="composer" id="post-form">
-                <div class="avatar green">AS</div>
-                <div class="composer-body">
-                  <textarea name="content" placeholder="Share an update, result, or useful resource..." required></textarea>
-                  <div class="composer-actions">
-                    <input name="link" type="url" placeholder="Optional Drive or web link">
-                    <button type="submit">Share update</button>
-                  </div>
+              <form class="vault-quick-form" id="vault-quick-form">
+                <div class="vault-quick-row">
+                  <input name="title" placeholder="Add a note or link to your vault..." required>
+                  <button type="submit">Save</button>
                 </div>
               </form>
-              <div id="overview-posts"></div>
+              <div id="overview-vault"></div>
             </section>
 
             <aside class="right-column">
@@ -130,11 +126,12 @@
           </div>
         </section>
 
-        <section class="view" id="feed-view">
+        <section class="view" id="vaults-view">
           <div class="intro">
-            <div><h1>Team feed</h1><p class="subtitle">Updates, results, and conversations from across the team.</p></div>
+            <div><h1>Personal Vaults</h1><p class="subtitle">Each member's private storage for notes, links, and resources.</p></div>
           </div>
-          <section class="panel list-panel" id="feed-list"></section>
+          <div class="vault-members-bar" id="vault-members-bar"></div>
+          <div id="vault-open-panel"></div>
         </section>
 
         <section class="view" id="presentations-view">
