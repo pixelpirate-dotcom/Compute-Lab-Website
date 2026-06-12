@@ -417,7 +417,7 @@ document.getElementById("vault-quick-form").addEventListener("submit", async (e)
   e.preventDefault();
   const values = readForm(e.currentTarget);
   try {
-    await addVaultItem(values.title, "");
+    await addVaultItem(values.title, values.content || "");
     e.currentTarget.reset();
     notify("Saved to your vault.");
   } catch (error) { showError(error); }
