@@ -77,12 +77,12 @@
                 <h2>My vault</h2>
                 <button class="text-btn" data-view="vaults">View all vaults</button>
               </div>
-              <form class="vault-quick-form" id="vault-quick-form">
-                <div class="vault-quick-row">
-                  <input name="title" placeholder="Title or heading..." required>
-                  <button type="submit">Save</button>
+              <form class="vault-add-form" id="vault-quick-form">
+                <div class="vault-add-row">
+                  <input name="title" placeholder="Title or short note..." required>
+                  <button class="primary-btn" type="submit">Save</button>
                 </div>
-                <input class="vault-quick-link" name="content" placeholder="Paste a link or add details (optional)...">
+                <textarea name="content" placeholder="More details, links, or content (optional)..."></textarea>
               </form>
               <div id="overview-vault"></div>
             </section>

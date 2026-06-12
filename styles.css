@@ -275,10 +275,6 @@ textarea:focus, input:focus, select:focus { border-color: var(--accent); backgro
 .vault-item-body a { color: var(--accent); text-decoration: underline; cursor: pointer; word-break: break-all; }
 .vault-item-body a:hover { color: var(--accent-text); }
 .vault-item-time { font-size: 10px; color: var(--muted); }
-.vault-quick-form { padding: 10px 14px; border-bottom: 1px solid var(--line); }
-.vault-quick-row { display: flex; gap: 8px; align-items: center; }
-.vault-quick-row input { flex: 1; font-size: 12px; }
-.vault-quick-link { display: block; width: 100%; margin-top: 6px; font-size: 12px; }
 .vault-quick-row button { padding: 7px 12px; color: #fff; background: var(--accent); border: 0; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .vault-quick-row button:hover { background: var(--accent-text); }
 
