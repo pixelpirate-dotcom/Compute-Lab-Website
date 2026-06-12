@@ -267,7 +267,7 @@ function vaultItemTemplate(item, isOwn) {
   return `<div class="vault-item">
     <div class="vault-item-body">
       <strong>${escapeHtml(item.title)}</strong>
-      ${item.content ? `<p>${escapeHtml(item.content)}</p>` : ""}
+      ${item.content ? `<p>${/^https?:\/\//i.test(item.content.trim()) ? `<a href="${escapeHtml(item.content.trim())}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.content.trim())}</a>` : escapeHtml(item.content)}</p>` : ""}
       <span class="vault-item-time">${escapeHtml(formatTime(item.created_at))}</span>
     </div>
     ${isOwn ? `<button class="remove-btn" data-remove-vault="${escapeHtml(String(item.id))}">Remove</button>` : ""}
