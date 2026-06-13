@@ -185,6 +185,12 @@ function resourceTemplate(resource) {
     <div><strong>${escapeHtml(resource.name)}</strong><span>${escapeHtml(resource.type)}</span></div>
   </a>`;
 }
+function dockItemTemplate(resource) {
+  return `<a class="dock-item" href="${escapeHtml(resource.url)}" target="_blank" rel="noreferrer" title="${escapeHtml(resource.name)} — ${escapeHtml(resource.type)}">
+    <div class="dock-icon">${escapeHtml(resource.name[0]?.toUpperCase() || "R")}</div>
+    <span class="dock-label">${escapeHtml(resource.name)}</span>
+  </a>`;
+}
 
 function render() {
   const role = currentMember?.role || "member";
@@ -209,7 +215,7 @@ function render() {
     [upcomingCount, "Upcoming talks"]
   ].map(([n, label]) => `<div class="stat"><strong>${String(n).padStart(2, "0")}</strong><span>${label}</span></div>`).join("");
 
-  document.getElementById("overview-resources").innerHTML = state.resources.slice(0, 3).map(resourceTemplate).join("") || empty("No resources added yet.");
+  document.getElementById("resource-dock").innerHTML = state.resources.map(dockItemTemplate).join("") || `<span class="dock-empty">No shared resources yet.</span>`;
   document.getElementById("resources-list").innerHTML = state.resources.map(resourceTemplate).join("") || empty("No resources added yet.");
 
   document.getElementById("overview-members").innerHTML =
